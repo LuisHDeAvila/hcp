@@ -1,43 +1,37 @@
 #!/bin/bash
 # author: eleAche
 # description: this script does a global recognition from a web domain
+set -e # strict mode
 
+DOMAIN=$1
+OUTPUT=scanningfor-${DOMAIN%.com}.txt
 SCAN=$(mktemp)
-verify(){
+
+verify() {
   local dependencie="$1"
   command -V $dependencie 1>/dev/null || ( echo "please install $dependencie" )
 }
-verify nmap
-verify proxychains4
-verify tor
-verify whatweb
-verify subfinder
 
 get_subdomains() {
   local domain="$1"
   subfinder -d $domain
 }
 
-scanning(){
+scanning() {
   local domain="$1"
   get_subdomains "$domain" | xargs whatweb >> $SCAN
 }
 
-get_hosts(){
+get_hosts() {
   grep -Eo '[0-9]{,3}\.[0-9]{,3}\.[0-9]{,3}\.[0-9]{,3}' "$SCAN" | sort -u | uniq
 }
 
-gathering_ports(){
+gathering_ports() {
   local host=$1
   proxychains4 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn "$host"
 }
 
-[[ "$#" -eq 1 ]] || echo "only 1 argument!"
-[[ "$UID" -eq "0" ]] || echo "require root"
-
 vortice() {
-  pgrep tor | xargs sudo kill
-
 cat << 'EOF' > /tmp/proxychains4.conf
 # proxychains4.conf
 strict_chain
@@ -55,18 +49,27 @@ tcp_connect_time_out 8000
 socks4	127.0.0.1 9050
 socks4	127.0.0.1 9051
 EOF
-
-  sudo cp /tmp/proxychains4.conf /etc/proxychains4.conf
+  pgrep tor | xargs sudo kill
+  sudo cp /tmp/proxychains4.conf /etc/proxychains4.conf >/dev/null
 }
+
+# requirements
+verify nmap
+verify proxychains4
+verify tor
+verify whatweb
+verify subfinder
+[[ "$#" -eq 1 ]] || echo "only 1 argument!"
+[[ "$UID" -eq "0" ]] || echo "require root"
 
 # main
 vortice
 tor >/dev/null &
-scanning "$1" 2>>$SCAN
-for TARGET in `get_hosts`
-  do
-    gathering_ports "$TARGET" >> scanningfor-${1%.com}.txt
-    let c++
-    echo -en "\e[3${RANDOM::1}m [$c] scanning $TARGET... \e[m\r"
-  done
+scanning "$DOMAIN" 2>>$SCAN
 
+for target in `get_hosts`
+  do
+    gathering_ports "$target" >> $OUTPUT
+    let c++
+    echo -en "\e[3${RANDOM::1}m [$c] scanning ${target}... \e[m\r"
+  done

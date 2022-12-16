@@ -4,12 +4,20 @@
 set -e # strict mode
 
 DOMAIN=$1
+REPORT_FILE="With_reNcor.txt"
 OUTPUT=scanningfor-${DOMAIN%.com}.txt
 SCAN=$(mktemp)
 
+look_this(){
+  local log="$@"
+  echo -en "[!] Scanning ==>> \e[3${RANDOM::1}m ${log} \e[m\r"
+}
+
 verify() {
   local dependencie="$1"
-  command -V $dependencie 1>/dev/null || ( echo "please install $dependencie" )
+  until command -V $dependencie 1>/dev/null; do
+    echo "please install $dependencie"
+  done
 }
 
 get_subdomains() {
@@ -19,6 +27,7 @@ get_subdomains() {
 
 scanning() {
   local domain="$1"
+  look_this "${domain}"
   get_subdomains "$domain" | xargs whatweb >> $SCAN
 }
 
@@ -49,7 +58,7 @@ tcp_connect_time_out 8000
 socks4	127.0.0.1 9050
 socks4	127.0.0.1 9051
 EOF
-  pgrep tor | xargs sudo kill
+  pgrep tor | xargs sudo kill || echo "[ok!]"
   sudo cp /tmp/proxychains4.conf /etc/proxychains4.conf >/dev/null
 }
 
@@ -65,6 +74,15 @@ verify subfinder
 # main
 vortice
 tor >/dev/null &
+while :
+  do
+    if proxychains4 ping -c 1 $DOMAIN
+      then
+        break
+    fi
+    sleep 1s
+done >/dev/null
+echo " ... lets go!"
 scanning "$DOMAIN" 2>>$SCAN
 
 for target in `get_hosts`
@@ -73,3 +91,6 @@ for target in `get_hosts`
     let c++
     echo -en "\e[3${RANDOM::1}m [$c] scanning ${target}... \e[m\r"
   done
+
+cp "$OUTPUT" $REPORT_FILE
+cat $REPORT_FILE

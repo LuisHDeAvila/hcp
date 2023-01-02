@@ -3,16 +3,19 @@
 # description: this script does a global recognition from a web domain
 set -e # strict mode
 
+# first parameter
 DOMAIN=$1
 REPORT_FILE="With_reNcor.txt"
 OUTPUT=scanningfor-${DOMAIN%.com}.txt
 SCAN=$(mktemp)
 
+# only is output function
 look_this(){
   local log="$@"
   echo -en "[!] Scanning ==>> \e[3${RANDOM::1}m ${log} \e[m\r"
 }
 
+# check dependencies
 verify() {
   local dependencie="$1"
   until command -V $dependencie 1>/dev/null; do
@@ -20,27 +23,32 @@ verify() {
   done
 }
 
+# find subdomains of any domain
 get_subdomains() {
   local domain="$1"
   subfinder -d $domain
 }
 
+# xargs whatweb get the ip from domain
 scanning() {
   local domain="$1"
   look_this "${domain}"
   get_subdomains "$domain" | xargs whatweb >> $SCAN
 }
 
+# ipv4 regex match
 get_hosts() {
   grep -Eo '[0-9]{,3}\.[0-9]{,3}\.[0-9]{,3}\.[0-9]{,3}' "$SCAN" | sort -u | uniq
 }
 
+# scanning host
 gathering_ports() {
   local host=$1
   proxychains4 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn "$host"
 }
 
-vortice() {
+# proxychains4 config file
+kamui() {
 cat << 'EOF' > /tmp/proxychains4.conf
 # proxychains4.conf
 strict_chain
@@ -50,7 +58,7 @@ proxy_dns
 remote_dns_subnet 224
 tcp_read_time_out 15000
 tcp_connect_time_out 8000
-proxy_dns 
+proxy_dns
 remote_dns_subnet 224
 tcp_read_time_out 15000
 tcp_connect_time_out 8000
@@ -72,7 +80,7 @@ verify subfinder
 [[ "$UID" -eq "0" ]] || echo "require root"
 
 # main
-vortice
+kamui
 tor >/dev/null &
 while :
   do
@@ -82,6 +90,7 @@ while :
     fi
     sleep 1s
 done >/dev/null
+
 echo " ... lets go!"
 scanning "$DOMAIN" 2>>$SCAN
 

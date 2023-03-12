@@ -2,9 +2,12 @@
 import shodan
 import sys
 
+# Facets examples: country:US | state:LA | city:Denver | postal:12345
+
 # requirements for execution:
 # read -p " shodan: please entry your api_key -==> " API_KEY
 # echo "$API_KEY" > .env
+
 
 # initializes
 shodankey= open('.env').readline().strip('\n')

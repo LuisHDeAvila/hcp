@@ -30,8 +30,8 @@ exclude_paths=('\/usr\/share\/' '\/opt\/')
 get_data(){
   sudo find /home -iname '*.pcap' -or -iname '*.pcapng' | while read line
     do
-  	echo "$line"
-	sudo tshark -r "$line" -zio,phs
+  		echo "$line"
+		sudo tshark -r "$line" -zio,phs
   done
 }
 

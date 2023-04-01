@@ -94,6 +94,9 @@ done >/dev/null
 echo " ... lets go!"
 scanning "$DOMAIN" 2>>$SCAN
 
+# direcciones que no son servidores, hazles un ping para confirmar si estan online ;}
+cat $SCAN
+
 for target in `get_hosts`
   do
     gathering_ports "$target" >> $OUTPUT

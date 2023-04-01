@@ -9,6 +9,14 @@
 
 	is a core markov modulus.
 '
+# Regex Patterns
+MAC_regex(){ local entry="$@" ; echo "$entry" \
+| grep -Eo '[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}' ;}
+IPV6(){ local entry="$@" ; echo "$entry" \
+| grep -Eo '[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}' ;}
+IPV4(){ local entry="$@" ; echo "$entry" \
+| grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' ;}
+
 # if you have files on extern disks, create subdirectories in /mnt and mount all disks
 check_environment()
 {
@@ -26,6 +34,8 @@ for requirement in ${requirements[@]}
 # look at `man hier` for criteria on which files to skip
 exclude_paths=('\/usr\/share\/' '\/opt\/')
 
+# 
+
 # parse wireshark outputs
 get_data(){
   sudo find /home -iname '*.pcap' -or -iname '*.pcapng' | while read line
@@ -37,4 +47,5 @@ get_data(){
 
 # main
 check_environment
+
 get_data

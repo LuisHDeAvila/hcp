@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+: '
+  Paso 1: localizar objetivo
+  Paso 2: recopilar informacion   <------ este script analiza la infraestructura web de un dominio, combinese con searchsploit
+  Paso 3: analisis de vulnerabilidades
+  Paso 4: explotar y acceder
+  Paso 5: ataque
+  Paso 6: borrar huellas
+  Paso 7: mantener acceso para futuras ocasiones
+'
+entry="$1"
+
+if (( $# => 1 ))
+  then if ping -c 1 $1
+      then echo "reconocimiento global al dominio $entry"
+  fi
+  else echo -e "\n Uso: \t${0} DOMINIO \n Ejemplo: \t${0} example.org\n"
+fi
+
+subfinder -d "$entry" | while read line
+  do
+      whatweb "$line" 2 >> .errors
+    done | tr ',' '\n' \
+    | sort -u | uniq > "$entry"
+    
+    
+ cat ${entry}
